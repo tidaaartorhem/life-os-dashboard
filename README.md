@@ -1,5 +1,7 @@
 # Life OS Dashboard
 
+**Live demo:** https://life-os-dashboard-1--truth-or-shots.us-east4.hosted.app/analytics
+
 A personal operating system for your life — tasks, goals, habits, calendar, finance, and focus time in one premium dashboard.
 
 Built with **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **Drizzle ORM** (SQLite locally, Postgres-ready), **@dnd-kit**, and **Recharts**.
