@@ -1,0 +1,7 @@
+# Firebase App Hosting configuration.
+# The backend auto-builds from the connected GitHub repo on every push to the
+# production branch. `npm run build` seeds a local SQLite database at build
+# time, so the deployed demo works with zero configuration.
+runConfig:
+  cpu: 1
+  memoryMiB: 1024
