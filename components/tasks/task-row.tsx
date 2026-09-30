@@ -6,18 +6,19 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toggleTaskAction, deleteTaskAction } from "@/app/actions/tasks";
-import type { TaskWithRelations } from "@/services/tasks";
+import type { TaskDto } from "@/types";
 import { cn } from "@/lib/utils";
 import {
   dueInfo,
   PRIORITY_VARIANT,
   STATUS_LABEL,
   STATUS_VARIANT,
+  PRIORITY_LABEL,
 } from "./task-helpers";
 
 interface TaskRowProps {
-  task: TaskWithRelations;
-  onEdit: (task: TaskWithRelations) => void;
+  task: TaskDto;
+  onEdit: (task: TaskDto) => void;
   compact?: boolean;
 }
 
@@ -67,7 +68,7 @@ export function TaskRow({ task, onEdit, compact = false }: TaskRowProps) {
               {STATUS_LABEL[task.status]}
             </Badge>
             <Badge variant={PRIORITY_VARIANT[task.priority]}>
-              {task.priority}
+              {PRIORITY_LABEL[task.priority]}
             </Badge>
             {due.variant && <Badge variant={due.variant}>{due.text}</Badge>}
             {task.project && (

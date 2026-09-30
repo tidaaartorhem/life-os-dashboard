@@ -6,13 +6,13 @@ import { Flame } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toggleHabitLogAction } from "@/app/actions/habits";
-import type { HabitWithLogs } from "@/services/habits";
+import type { HabitDto } from "@/types";
 import { cn } from "@/lib/utils";
-import { toDateKey } from "@/lib/dates";
+import { toISODate } from "@/lib/dates";
 
 const DAYS = 7;
 
-export function HabitTracker({ habits }: { habits: HabitWithLogs[] }) {
+export function HabitTracker({ habits }: { habits: HabitDto[] }) {
   const [isPending, startTransition] = useTransition();
 
   const days = Array.from({ length: DAYS }, (_, i) =>
@@ -39,7 +39,6 @@ export function HabitTracker({ habits }: { habits: HabitWithLogs[] }) {
         ) : (
           <ul className="flex flex-col gap-3">
             {habits.map((habit) => {
-              const doneDates = new Set(habit.logs.map((l) => l.date));
               return (
                 <li key={habit.id}>
                   <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -60,9 +59,9 @@ export function HabitTracker({ habits }: { habits: HabitWithLogs[] }) {
                     aria-label={`${habit.name} — last 7 days`}
                   >
                     {days.map((day) => {
-                      const key = toDateKey(day);
-                      const done = doneDates.has(key);
-                      const isTodayCell = key === toDateKey(new Date());
+                      const key = toISODate(day);
+                      const done = habit.logsByDate[key] === true;
+                      const isTodayCell = key === toISODate(new Date());
                       return (
                         <button
                           key={key}

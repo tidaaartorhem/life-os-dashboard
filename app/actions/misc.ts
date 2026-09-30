@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { getDemoUserId } from "@/lib/auth";
-import { idSchema } from "@/lib/validations";
+import {
+  transactionSchema,
+  noteSchema,
+} from "@/lib/validations";
 import {
   createTransaction,
   deleteTransaction,
@@ -13,22 +16,17 @@ import {
   createFocusSession,
 } from "@/services/misc";
 
-const transactionSchema = z.object({
-  amount: z.number().finite(),
-  category: z.string().min(1).max(40),
-  description: z.string().max(200).default(""),
-  date: z.string().date(),
-});
-
-const noteSchema = z.object({
-  title: z.string().min(1).max(120),
-  content: z.string().min(1),
-});
-
+const idSchema = z.string().min(1);
 const focusSchema = z.object({
-  durationMinutes: z.number().int().min(1).max(480),
-  startedAt: z.string().datetime(),
+  label: z.string().max(200).nullish(),
+  minutes: z.coerce.number().int().min(1).max(1440),
+  date: z.coerce.date(),
 });
+
+function revalidateFinance() {
+  revalidatePath("/");
+  revalidatePath("/analytics");
+}
 
 export async function createTransactionAction(input: unknown) {
   const userId = await getDemoUserId();
@@ -37,16 +35,14 @@ export async function createTransactionAction(input: unknown) {
     userId,
     transactionSchema.parse(input)
   );
-  revalidatePath("/");
-  revalidatePath("/analytics");
+  revalidateFinance();
   return tx;
 }
 
 export async function deleteTransactionAction(id: string) {
   const userId = await getDemoUserId();
   await deleteTransaction(db, userId, idSchema.parse(id));
-  revalidatePath("/");
-  revalidatePath("/analytics");
+  revalidateFinance();
 }
 
 export async function createNoteAction(input: unknown) {
@@ -69,7 +65,6 @@ export async function createFocusSessionAction(input: unknown) {
     userId,
     focusSchema.parse(input)
   );
-  revalidatePath("/");
-  revalidatePath("/analytics");
+  revalidateFinance();
   return session;
 }

@@ -9,17 +9,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { createTaskAction, updateTaskAction } from "@/app/actions/tasks";
-import type { TaskWithRelations } from "@/services/tasks";
-import type { Project, Tag, Goal } from "@/db/schema";
-import { toDateInput } from "@/lib/dates";
+import type { TaskDto } from "@/types";
+import type { Project, Tag, Goal } from "@/types";
+import { toDateInputValue } from "@/lib/dates";
 
 interface TaskDialogProps {
   open: boolean;
   onClose: () => void;
-  task?: TaskWithRelations | null;
+  task?: TaskDto | null;
   projects: Project[];
   tags: Tag[];
   goals: Goal[];
+  initialStatus?: string;
 }
 
 export function TaskDialog({
@@ -29,6 +30,7 @@ export function TaskDialog({
   projects,
   tags,
   goals,
+  initialStatus = "todo",
 }: TaskDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -47,20 +49,21 @@ export function TaskDialog({
     e.preventDefault();
     setError(null);
     const form = new FormData(e.currentTarget);
+    const str = (name: string) => {
+      const v = String(form.get(name) ?? "").trim();
+      return v === "" ? undefined : v;
+    };
     const raw = {
       title: String(form.get("title") ?? ""),
-      description: String(form.get("description") ?? "") || undefined,
+      description: str("description") ?? null,
       status: String(form.get("status") ?? "todo"),
       priority: String(form.get("priority") ?? "medium"),
-      dueDate: String(form.get("dueDate") ?? "") || undefined,
-      projectId: String(form.get("projectId") ?? "") || undefined,
-      goalId: String(form.get("goalId") ?? "") || undefined,
+      dueDate: str("dueDate") ?? null,
+      projectId: str("projectId") ?? null,
+      goalId: str("goalId") ?? null,
       tagIds: selectedTags,
       estimatedMinutes:
-        form.get("estimatedMinutes") &&
-        String(form.get("estimatedMinutes")) !== ""
-          ? Number(form.get("estimatedMinutes"))
-          : undefined,
+        str("estimatedMinutes") != null ? Number(str("estimatedMinutes")) : null,
     };
     startTransition(async () => {
       try {
@@ -112,9 +115,9 @@ export function TaskDialog({
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="task-status">Status</Label>
-            <Select id="task-status" name="status" defaultValue={task?.status ?? "todo"}>
+            <Select id="task-status" name="status" defaultValue={task?.status ?? initialStatus}>
               <option value="todo">To do</option>
-              <option value="in-progress">In progress</option>
+              <option value="in_progress">In progress</option>
               <option value="done">Done</option>
             </Select>
           </div>
@@ -128,6 +131,7 @@ export function TaskDialog({
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
+              <option value="urgent">Urgent</option>
             </Select>
           </div>
         </div>
@@ -139,7 +143,7 @@ export function TaskDialog({
               id="task-due"
               name="dueDate"
               type="date"
-              defaultValue={task?.dueDate ? toDateInput(task.dueDate) : ""}
+              defaultValue={task?.dueDate ? toDateInputValue(task.dueDate) : ""}
             />
           </div>
           <div className="flex flex-col gap-1.5">

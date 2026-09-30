@@ -12,7 +12,7 @@ import { format } from "date-fns";
 import { db } from "@/lib/db";
 import { getDemoUserId } from "@/lib/auth";
 import { getDashboardData } from "@/services/insights";
-import { listProjects, listTags } from "@/services/tasks";
+import { listProjects, listTags, listTransactions } from "@/services/misc";
 import { listGoals } from "@/services/goals";
 import { PageHeader } from "@/components/ui/page-header";
 import { Stat } from "@/components/ui/stat";
@@ -38,14 +38,16 @@ function greeting(): string {
 
 export default async function DashboardPage() {
   const userId = await getDemoUserId();
-  const [data, projects, tags, goals] = await Promise.all([
+  const [data, projects, tags, goals, recentTransactions] = await Promise.all([
     getDashboardData(db, userId),
     listProjects(db, userId),
     listTags(db, userId),
     listGoals(db, userId),
+    listTransactions(db, userId, undefined, 5),
   ]);
 
   const focusTasks = [...data.overdueTasks, ...data.todayTasks];
+  const net = data.finance.monthIncome - data.finance.monthExpenses;
 
   return (
     <div>
@@ -145,10 +147,10 @@ export default async function DashboardPage() {
                   <li key={event.id} className="flex gap-3">
                     <div className="flex w-11 shrink-0 flex-col items-center rounded-md border border-zinc-200 bg-zinc-50 py-1">
                       <span className="text-[10px] font-semibold uppercase text-zinc-500">
-                        {format(event.startAt, "MMM")}
+                        {format(event.startsAt, "MMM")}
                       </span>
                       <span className="text-sm font-bold text-zinc-900">
-                        {format(event.startAt, "d")}
+                        {format(event.startsAt, "d")}
                       </span>
                     </div>
                     <div className="min-w-0">
@@ -156,7 +158,7 @@ export default async function DashboardPage() {
                         {event.title}
                       </p>
                       <p className="text-xs text-zinc-500">
-                        {format(event.startAt, "EEE, h:mm a")}
+                        {format(event.startsAt, "EEE, h:mm a")}
                         {event.location ? ` · ${event.location}` : ""}
                       </p>
                     </div>
@@ -187,13 +189,13 @@ export default async function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {data.goalProgress.length === 0 ? (
+            {data.activeGoals.length === 0 ? (
               <p className="py-6 text-center text-sm text-zinc-500">
                 No active goals yet.
               </p>
             ) : (
               <ul className="flex flex-col gap-4">
-                {data.goalProgress.map((g) => (
+                {data.activeGoals.map((g) => (
                   <li key={g.id}>
                     <div className="mb-1.5 flex items-center justify-between gap-2">
                       <span className="truncate text-sm font-medium text-zinc-800">
@@ -203,10 +205,7 @@ export default async function DashboardPage() {
                         {g.progress}%
                       </span>
                     </div>
-                    <Progress
-                      value={g.progress}
-                      label={`${g.title} progress`}
-                    />
+                    <Progress value={g.progress} label={`${g.title} progress`} />
                   </li>
                 ))}
               </ul>
@@ -230,11 +229,10 @@ export default async function DashboardPage() {
             <div className="flex items-baseline gap-2">
               <span
                 className={`text-2xl font-semibold tracking-tight ${
-                  data.finance.net >= 0 ? "text-green-600" : "text-red-600"
+                  net >= 0 ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {data.finance.net >= 0 ? "+" : "-"}$
-                {Math.abs(data.finance.net).toFixed(2)}
+                {net >= 0 ? "+" : "-"}${Math.abs(net).toFixed(2)}
               </span>
               <span className="text-xs text-zinc-500">net</span>
             </div>
@@ -242,19 +240,19 @@ export default async function DashboardPage() {
               <div className="flex justify-between">
                 <span className="text-zinc-500">Income</span>
                 <span className="font-medium text-green-600">
-                  +${data.finance.income.toFixed(2)}
+                  +${data.finance.monthIncome.toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500">Spending</span>
                 <span className="font-medium text-red-600">
-                  -${data.finance.expenses.toFixed(2)}
+                  -${data.finance.monthExpenses.toFixed(2)}
                 </span>
               </div>
             </div>
-            {data.recentTransactions.length > 0 && (
+            {recentTransactions.length > 0 && (
               <ul className="mt-4 flex flex-col gap-2 border-t border-zinc-100 pt-3">
-                {data.recentTransactions.map((t) => (
+                {recentTransactions.map((t) => (
                   <li
                     key={t.id}
                     className="flex items-center justify-between gap-2 text-sm"
@@ -267,10 +265,10 @@ export default async function DashboardPage() {
                     </span>
                     <span
                       className={`font-medium ${
-                        t.amount >= 0 ? "text-green-600" : "text-zinc-900"
+                        t.kind === "income" ? "text-green-600" : "text-zinc-900"
                       }`}
                     >
-                      {t.amount >= 0 ? "+" : "-"}$
+                      {t.kind === "income" ? "+" : "-"}$
                       {Math.abs(t.amount).toFixed(2)}
                     </span>
                   </li>

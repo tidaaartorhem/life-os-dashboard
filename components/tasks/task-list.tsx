@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TaskRow } from "./task-row";
 import { TaskDialog } from "./task-dialog";
-import type { TaskWithRelations } from "@/services/tasks";
-import type { Project, Tag, Goal } from "@/db/schema";
+import type { TaskDto } from "@/types";
+import type { Project, Tag, Goal } from "@/types";
 
 interface TaskListProps {
-  tasks: TaskWithRelations[];
+  tasks: TaskDto[];
   projects: Project[];
   tags: Tag[];
   goals: Goal[];
@@ -29,14 +29,14 @@ export function TaskList({
   emptyDescription = "Tasks you create will show up here.",
 }: TaskListProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<TaskWithRelations | null>(null);
+  const [editing, setEditing] = useState<TaskDto | null>(null);
 
   const openNew = () => {
     setEditing(null);
     setDialogOpen(true);
   };
 
-  const openEdit = (task: TaskWithRelations) => {
+  const openEdit = (task: TaskDto) => {
     setEditing(task);
     setDialogOpen(true);
   };

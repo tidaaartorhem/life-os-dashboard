@@ -1,29 +1,31 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { getDemoUserId } from "@/lib/auth";
-import {
-  goalCreateSchema,
-  goalUpdateSchema,
-  milestoneCreateSchema,
-  idSchema,
-} from "@/lib/validations";
+import { goalSchema, milestoneSchema } from "@/lib/validations";
 import {
   createGoal,
   updateGoal,
   deleteGoal,
   createMilestone,
-  toggleMilestone,
+  updateMilestone,
   deleteMilestone,
 } from "@/services/goals";
 
-export async function createGoalAction(input: unknown) {
-  const userId = await getDemoUserId();
-  const goal = await createGoal(db, userId, goalCreateSchema.parse(input));
+const idSchema = z.string().min(1);
+
+function revalidateGoals() {
   revalidatePath("/goals");
   revalidatePath("/");
   revalidatePath("/analytics");
+}
+
+export async function createGoalAction(input: unknown) {
+  const userId = await getDemoUserId();
+  const goal = await createGoal(db, userId, goalSchema.parse(input));
+  revalidateGoals();
   return goal;
 }
 
@@ -33,19 +35,16 @@ export async function updateGoalAction(id: string, input: unknown) {
     db,
     userId,
     idSchema.parse(id),
-    goalUpdateSchema.parse(input)
+    goalSchema.partial().parse(input)
   );
-  revalidatePath("/goals");
-  revalidatePath("/");
+  revalidateGoals();
   return goal;
 }
 
 export async function deleteGoalAction(id: string) {
   const userId = await getDemoUserId();
   await deleteGoal(db, userId, idSchema.parse(id));
-  revalidatePath("/goals");
-  revalidatePath("/");
-  revalidatePath("/analytics");
+  revalidateGoals();
 }
 
 export async function createMilestoneAction(goalId: string, input: unknown) {
@@ -53,25 +52,25 @@ export async function createMilestoneAction(goalId: string, input: unknown) {
   const milestone = await createMilestone(
     db,
     userId,
-    idSchema.parse(goalId),
-    milestoneCreateSchema.parse(input)
+    milestoneSchema.parse({ ...(input as object), goalId })
   );
-  revalidatePath("/goals");
-  revalidatePath("/");
+  revalidateGoals();
   return milestone;
 }
 
-export async function toggleMilestoneAction(id: string) {
+export async function updateMilestoneAction(id: string, input: unknown) {
   const userId = await getDemoUserId();
-  const milestone = await toggleMilestone(db, userId, idSchema.parse(id));
-  revalidatePath("/goals");
-  revalidatePath("/");
-  return milestone;
+  await updateMilestone(
+    db,
+    userId,
+    idSchema.parse(id),
+    milestoneSchema.omit({ goalId: true }).partial().parse(input)
+  );
+  revalidateGoals();
 }
 
 export async function deleteMilestoneAction(id: string) {
   const userId = await getDemoUserId();
   await deleteMilestone(db, userId, idSchema.parse(id));
-  revalidatePath("/goals");
-  revalidatePath("/");
+  revalidateGoals();
 }

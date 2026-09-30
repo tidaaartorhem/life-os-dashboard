@@ -1,4 +1,10 @@
 import { format, isToday, isTomorrow, isPast, startOfDay } from "date-fns";
+import {
+  TASK_STATUS_LABELS,
+  PRIORITY_LABELS,
+  type TaskStatus,
+  type Priority,
+} from "@/types";
 
 export function dueInfo(dueDate: Date | null): {
   text: string;
@@ -16,19 +22,18 @@ export function dueInfo(dueDate: Date | null): {
 
 export const PRIORITY_VARIANT: Record<string, "danger" | "warning" | "success"> =
   {
-    high: "danger",
-    medium: "warning",
     low: "success",
+    medium: "warning",
+    high: "danger",
+    urgent: "danger",
   };
 
-export const STATUS_VARIANT: Record<string, "default" | "info" | "success"> = {
-  todo: "default",
-  "in-progress": "info",
-  done: "success",
-};
+export const STATUS_VARIANT: Record<string, "default" | "info" | "success"> =
+  {
+    todo: "default",
+    in_progress: "info",
+    done: "success",
+  };
 
-export const STATUS_LABEL: Record<string, string> = {
-  todo: "To do",
-  "in-progress": "In progress",
-  done: "Done",
-};
+export const STATUS_LABEL: Record<string, string> = TASK_STATUS_LABELS;
+export const PRIORITY_LABEL: Record<string, string> = PRIORITY_LABELS;

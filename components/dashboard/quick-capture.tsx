@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createTaskAction } from "@/app/actions/tasks";
 import { createTransactionAction } from "@/app/actions/misc";
-import { todayKey } from "@/lib/dates";
+import { toISODate } from "@/lib/dates";
 
 export function QuickCapture() {
   const [isPending, startTransition] = useTransition();
@@ -21,7 +21,7 @@ export function QuickCapture() {
     setError(null);
     startTransition(async () => {
       try {
-        await createTaskAction({ title, dueDate: todayKey() });
+        await createTaskAction({ title, dueDate: toISODate(new Date()) });
         form.reset();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not add task.");
@@ -32,17 +32,18 @@ export function QuickCapture() {
   const quickTransaction = (form: HTMLFormElement) => {
     const data = new FormData(form);
     const amount = Number(data.get("amount"));
+    const label = String(data.get("label") ?? "").trim();
     const category = String(data.get("category") ?? "").trim();
-    if (!amount || !category) return;
-    const kind = String(data.get("kind") ?? "expense");
+    if (!amount || amount <= 0 || !label || !category) return;
     setError(null);
     startTransition(async () => {
       try {
         await createTransactionAction({
-          amount: kind === "expense" ? -Math.abs(amount) : Math.abs(amount),
+          amount: Math.abs(amount),
+          label,
           category,
-          description: String(data.get("description") ?? ""),
-          date: todayKey(),
+          kind: String(data.get("kind") ?? "expense"),
+          date: toISODate(new Date()),
         });
         form.reset();
       } catch (err) {
@@ -110,10 +111,17 @@ export function QuickCapture() {
               required
             />
             <Input
+              name="label"
+              placeholder="What was it?"
+              maxLength={200}
+              className="w-36"
+              required
+            />
+            <Input
               name="category"
               placeholder="Category"
-              maxLength={40}
-              className="w-32"
+              maxLength={100}
+              className="w-28"
               required
             />
             <label className="sr-only" htmlFor="quick-kind">

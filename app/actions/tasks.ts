@@ -1,37 +1,32 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { getDemoUserId } from "@/lib/auth";
-import {
-  taskCreateSchema,
-  taskUpdateSchema,
-  idSchema,
-} from "@/lib/validations";
+import { taskSchema, projectSchema, tagSchema } from "@/lib/validations";
 import {
   createTask,
   updateTask,
   deleteTask,
-  toggleTask,
+  toggleTaskComplete,
   moveTask,
-  createProject,
-  createTag,
 } from "@/services/tasks";
-import { z } from "zod";
+import { createProject, createTag } from "@/services/misc";
 
-const projectSchema = z.object({ name: z.string().min(1).max(80) });
-const tagSchema = z.object({
-  name: z.string().min(1).max(40),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#6366f1"),
-});
+const idSchema = z.string().min(1);
+const taskStatusSchema = z.enum(["todo", "in_progress", "done"]);
+
+const TASK_PATHS = ["/tasks", "/", "/goals", "/calendar", "/analytics"];
+
+function revalidateTasks() {
+  for (const p of TASK_PATHS) revalidatePath(p);
+}
 
 export async function createTaskAction(input: unknown) {
   const userId = await getDemoUserId();
-  const task = await createTask(db, userId, taskCreateSchema.parse(input));
-  revalidatePath("/tasks");
-  revalidatePath("/");
-  revalidatePath("/calendar");
-  revalidatePath("/analytics");
+  const task = await createTask(db, userId, taskSchema.parse(input));
+  revalidateTasks();
   return task;
 }
 
@@ -41,59 +36,46 @@ export async function updateTaskAction(id: string, input: unknown) {
     db,
     userId,
     idSchema.parse(id),
-    taskUpdateSchema.parse(input)
+    taskSchema.partial().parse(input)
   );
-  revalidatePath("/tasks");
-  revalidatePath("/");
-  revalidatePath("/calendar");
-  revalidatePath("/analytics");
+  revalidateTasks();
   return task;
 }
 
 export async function toggleTaskAction(id: string) {
   const userId = await getDemoUserId();
-  const task = await toggleTask(db, userId, idSchema.parse(id));
-  revalidatePath("/tasks");
-  revalidatePath("/");
-  revalidatePath("/goals");
-  revalidatePath("/analytics");
+  const task = await toggleTaskComplete(db, userId, idSchema.parse(id));
+  revalidateTasks();
   return task;
 }
 
 export async function deleteTaskAction(id: string) {
   const userId = await getDemoUserId();
   await deleteTask(db, userId, idSchema.parse(id));
-  revalidatePath("/tasks");
-  revalidatePath("/");
-  revalidatePath("/goals");
-  revalidatePath("/calendar");
-  revalidatePath("/analytics");
+  revalidateTasks();
 }
 
-export async function moveTaskAction(id: string, toStatus: string) {
+export async function moveTaskAction(id: string, toStatus: unknown) {
   const userId = await getDemoUserId();
-  const task = await moveTask(db, userId, idSchema.parse(id), toStatus);
-  revalidatePath("/tasks");
-  revalidatePath("/");
-  revalidatePath("/analytics");
-  return task;
+  await moveTask(
+    db,
+    userId,
+    idSchema.parse(id),
+    taskStatusSchema.parse(toStatus)
+  );
+  revalidateTasks();
 }
 
 export async function createProjectAction(input: unknown) {
   const userId = await getDemoUserId();
-  const project = await createProject(
-    db,
-    userId,
-    projectSchema.parse(input).name
-  );
+  const project = await createProject(db, userId, projectSchema.parse(input));
   revalidatePath("/tasks");
   return project;
 }
 
 export async function createTagAction(input: unknown) {
   const userId = await getDemoUserId();
-  const parsed = tagSchema.parse(input);
-  const tag = await createTag(db, userId, parsed.name, parsed.color);
+  const tag = await createTag(db, userId, tagSchema.parse(input));
   revalidatePath("/tasks");
   return tag;
 }

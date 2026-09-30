@@ -1,35 +1,39 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { db } from "@/lib/db";
 import { getDemoUserId } from "@/lib/auth";
-import { eventCreateSchema, idSchema } from "@/lib/validations";
+import { eventSchema } from "@/lib/validations";
 import { createEvent, updateEvent, deleteEvent } from "@/services/events";
+
+const idSchema = z.string().min(1);
+
+function revalidateEvents() {
+  revalidatePath("/calendar");
+  revalidatePath("/");
+}
 
 export async function createEventAction(input: unknown) {
   const userId = await getDemoUserId();
-  const event = await createEvent(db, userId, eventCreateSchema.parse(input));
-  revalidatePath("/calendar");
-  revalidatePath("/");
+  const event = await createEvent(db, userId, eventSchema.parse(input));
+  revalidateEvents();
   return event;
 }
 
 export async function updateEventAction(id: string, input: unknown) {
   const userId = await getDemoUserId();
-  const event = await updateEvent(
+  await updateEvent(
     db,
     userId,
     idSchema.parse(id),
-    eventCreateSchema.partial().parse(input)
+    eventSchema.partial().parse(input)
   );
-  revalidatePath("/calendar");
-  revalidatePath("/");
-  return event;
+  revalidateEvents();
 }
 
 export async function deleteEventAction(id: string) {
   const userId = await getDemoUserId();
   await deleteEvent(db, userId, idSchema.parse(id));
-  revalidatePath("/calendar");
-  revalidatePath("/");
+  revalidateEvents();
 }
