@@ -137,8 +137,8 @@ describe("goal journey (acceptance path)", () => {
       title: "Published",
       status: "completed",
     });
-    expect(updated.title).toBe("Published");
-    expect(updated.status).toBe("completed");
+    expect(updated?.title).toBe("Published");
+    expect(updated?.status).toBe("completed");
 
     const ms = await createMilestone(db, userId, {
       title: "Step 1",

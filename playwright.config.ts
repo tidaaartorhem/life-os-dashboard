@@ -4,6 +4,8 @@ import { defineConfig, devices } from "@playwright/test";
  * E2E tests run against a dev server started by the webServer block.
  * They use the app's demo user database; each spec cleans up the
  * entities it creates so runs stay idempotent.
+ *
+ * First run: npx playwright install chromium --only-shell
  */
 export default defineConfig({
   testDir: "./tests/e2e",
