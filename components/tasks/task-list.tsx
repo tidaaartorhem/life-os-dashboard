@@ -6,14 +6,14 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TaskRow } from "./task-row";
 import { TaskDialog } from "./task-dialog";
-import type { TaskDto } from "@/types";
+import type { TaskDto, GoalDto } from "@/types";
 import type { Project, Tag, Goal } from "@/types";
 
 interface TaskListProps {
   tasks: TaskDto[];
   projects: Project[];
   tags: Tag[];
-  goals: Goal[];
+  goals: GoalDto[];
   showAdd?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;

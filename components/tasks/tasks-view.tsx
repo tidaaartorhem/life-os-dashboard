@@ -11,14 +11,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TaskRow } from "./task-row";
 import { TaskDialog } from "./task-dialog";
 import { KanbanBoard } from "./kanban-board";
-import type { TaskDto } from "@/types";
+import type { TaskDto, GoalDto } from "@/types";
 import type { Project, Tag, Goal } from "@/types";
 
 interface TasksViewProps {
   tasks: TaskDto[];
   projects: Project[];
   tags: Tag[];
-  goals: Goal[];
+  goals: GoalDto[];
 }
 
 export function TasksView({ tasks, projects, tags, goals }: TasksViewProps) {

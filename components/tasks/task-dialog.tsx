@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { createTaskAction, updateTaskAction } from "@/app/actions/tasks";
-import type { TaskDto } from "@/types";
-import type { Project, Tag, Goal } from "@/types";
+import type { TaskDto, GoalDto, Project, Tag } from "@/types";
 import { toDateInputValue } from "@/lib/dates";
 
 interface TaskDialogProps {
@@ -19,8 +18,10 @@ interface TaskDialogProps {
   task?: TaskDto | null;
   projects: Project[];
   tags: Tag[];
-  goals: Goal[];
+  goals: GoalDto[];
   initialStatus?: string;
+  defaultGoalId?: string;
+  defaultMilestoneId?: string;
 }
 
 export function TaskDialog({
@@ -31,12 +32,15 @@ export function TaskDialog({
   tags,
   goals,
   initialStatus = "todo",
+  defaultGoalId,
+  defaultMilestoneId,
 }: TaskDialogProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>(
     task?.tags.map((t) => t.id) ?? []
   );
+  const [goalId, setGoalId] = useState(task?.goalId ?? defaultGoalId ?? "");
 
   const editing = Boolean(task);
 
@@ -61,6 +65,7 @@ export function TaskDialog({
       dueDate: str("dueDate") ?? null,
       projectId: str("projectId") ?? null,
       goalId: str("goalId") ?? null,
+      milestoneId: str("milestoneId") ?? null,
       tagIds: selectedTags,
       estimatedMinutes:
         str("estimatedMinutes") != null ? Number(str("estimatedMinutes")) : null,
@@ -177,7 +182,12 @@ export function TaskDialog({
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="task-goal">Linked goal</Label>
-            <Select id="task-goal" name="goalId" defaultValue={task?.goalId ?? ""}>
+            <Select
+              id="task-goal"
+              name="goalId"
+              value={goalId}
+              onChange={(e) => setGoalId(e.target.value)}
+            >
               <option value="">None</option>
               {goals.map((g) => (
                 <option key={g.id} value={g.id}>
@@ -187,6 +197,26 @@ export function TaskDialog({
             </Select>
           </div>
         </div>
+
+        {goalId && (
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="task-milestone">Milestone</Label>
+            <Select
+              id="task-milestone"
+              name="milestoneId"
+              defaultValue={task?.milestoneId ?? defaultMilestoneId ?? ""}
+            >
+              <option value="">None</option>
+              {(goals.find((g) => g.id === goalId)?.milestones ?? []).map(
+                (m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.title}
+                  </option>
+                )
+              )}
+            </Select>
+          </div>
+        )}
 
         {tags.length > 0 && (
           <fieldset>
