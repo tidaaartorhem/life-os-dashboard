@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+import { users } from "../db/schema";
 import { db } from "./db";
 
 /**
@@ -10,10 +12,12 @@ import { db } from "./db";
  */
 export async function getDemoUser() {
   const email = process.env.DEMO_USER_EMAIL ?? "demo@lifeos.app";
-  const user = await db.user.findUnique({ where: { email } });
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email),
+  });
   if (!user) {
     throw new Error(
-      "Demo user not found. Run `npm run db:push && npm run db:seed` first."
+      "Demo user not found. Run `npm run db:migrate && npm run db:seed` first."
     );
   }
   return user;
