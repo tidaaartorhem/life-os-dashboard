@@ -14,6 +14,10 @@ export const metadata: Metadata = {
     "Tasks, goals, habits, calendar, finance, and focus — one operating system for your life.",
 };
 
+// All pages are database-backed and user-specific: never prerender at build
+// time, always render fresh on each request.
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
