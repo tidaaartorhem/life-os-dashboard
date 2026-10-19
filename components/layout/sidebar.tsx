@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { ResetDemoButton } from "@/components/layout/reset-demo-button";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -92,7 +93,7 @@ export function Sidebar() {
             onClick={() => setOpen(false)}
             aria-hidden="true"
           />
-          <div className="absolute inset-y-0 left-0 w-64 bg-zinc-950 p-4">
+          <div className="absolute inset-y-0 left-0 flex w-64 flex-col bg-zinc-950 p-4">
             <span className="mb-4 flex items-center gap-2 px-2 font-semibold tracking-tight text-white">
               <span className="flex size-7 items-center justify-center rounded-md bg-indigo-600 text-white">
                 <Layers className="size-4" aria-hidden="true" />
@@ -100,6 +101,13 @@ export function Sidebar() {
               Life OS
             </span>
             <NavLinks onNavigate={() => setOpen(false)} />
+            <div className="mt-auto rounded-md border border-white/10 bg-white/5 p-3">
+              <p className="text-xs font-medium text-white">Demo workspace</p>
+              <p className="mt-0.5 text-xs text-zinc-400">
+                Signed in as demo@lifeos.app
+              </p>
+              <ResetDemoButton />
+            </div>
           </div>
         </div>
       )}
@@ -118,6 +126,7 @@ export function Sidebar() {
           <p className="mt-0.5 text-xs text-zinc-400">
             Signed in as demo@lifeos.app
           </p>
+          <ResetDemoButton />
         </div>
       </aside>
     </>
