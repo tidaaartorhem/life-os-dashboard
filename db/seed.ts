@@ -15,6 +15,7 @@ import {
   users,
 } from "./schema";
 import { db } from "../lib/db";
+import type { DbClient } from "../lib/db";
 import { addDays, startOfDay } from "date-fns";
 
 const DAY = 86400000;
@@ -24,9 +25,35 @@ const at = (base: Date, daysOffset: number, h = 9, m = 0) => {
   return d;
 };
 
-async function main() {
-  const email = process.env.DEMO_USER_EMAIL ?? "demo@lifeos.app";
-  const today = startOfDay(new Date());
+export interface SeedDemoDataOptions {
+  /** Demo user email. Defaults to DEMO_USER_EMAIL, then "demo@lifeos.app". */
+  email?: string;
+  /** Anchor "today" for all relative seed dates. Defaults to now. */
+  now?: Date;
+}
+
+export interface SeedDemoDataSummary {
+  projects: number;
+  tags: number;
+  tasks: number;
+  goals: number;
+  milestones: number;
+}
+
+/**
+ * Wipes the demo user's data and rebuilds it anchored to `now`.
+ *
+ * Idempotent and scoped to a single user by email — other users' rows are
+ * never touched. Accepts the db client (like every service) so it can run
+ * from the `db:seed` CLI script, the App Hosting build, a server action,
+ * or an isolated test database.
+ */
+export async function seedDemoData(
+  db: DbClient,
+  opts: SeedDemoDataOptions = {}
+): Promise<SeedDemoDataSummary> {
+  const email = opts.email ?? process.env.DEMO_USER_EMAIL ?? "demo@lifeos.app";
+  const today = startOfDay(opts.now ?? new Date());
 
   // Idempotent: wipe the demo user's data and rebuild.
   await db.delete(users).where(eq(users.email, email));
@@ -293,6 +320,18 @@ async function main() {
 
   console.log(`Seeded demo data for ${email}`);
   console.log(`  projects=${projectRows.length} tags=${tagRows.length} tasks=${taskSeeds.length} goals=3 milestones=${msRows.length}`);
+  return {
+    projects: projectRows.length,
+    tags: tagRows.length,
+    tasks: taskSeeds.length,
+    goals: 3,
+    milestones: msRows.length,
+  };
+}
+
+async function main() {
+  const email = process.env.DEMO_USER_EMAIL ?? "demo@lifeos.app";
+  await seedDemoData(db, { email });
 }
 
 main().catch((err) => {
