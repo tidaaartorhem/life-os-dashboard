@@ -13,6 +13,7 @@ Built with **Next.js 16**, **React 19**, **TypeScript**, **Tailwind CSS v4**, **
 - **Goals** — goals with milestones and linked tasks; progress auto-computed from completed tasks.
 - **Calendar** — month / week / day views, event CRUD, drag events between days to reschedule.
 - **Analytics** — task completion trends, status/priority breakdowns, focus-time charts, spending by category, 4-week habit adherence heatmap.
+- **Demo workspace** — one-click "Reset demo data" in the sidebar wipes the demo workspace and re-seeds it anchored to today, so the live demo never shows stale dates. Scoped to the demo user only.
 
 ## Quick start
 
@@ -24,6 +25,19 @@ npm run dev          # http://localhost:3000
 ```
 
 Demo credentials: sign in is mocked — the seeded user is **demo@lifeos.app**. No password required.
+
+### Keeping the demo fresh
+
+All seed dates are anchored to the day the seed runs. The seed is idempotent
+and scoped to the demo user, so the demo can be refreshed at any time:
+
+- **In the UI:** click **Reset demo data** in the sidebar's Demo workspace card (confirmation dialog first).
+- **From the CLI:** `npm run db:seed`.
+- **On deploy:** `npm run build` re-seeds at build time, so every App Hosting rollout ships with fresh dates.
+
+`seedDemoData(db, { email, now })` in `db/seed.ts` is the single shared
+implementation; the `resetDemoData` service and server action are thin
+wrappers over it (see `tests/integration/demo-reset.test.ts`).
 
 ### Scripts
 
