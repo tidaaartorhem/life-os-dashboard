@@ -6,6 +6,11 @@ import {
   tags,
   transactions,
 } from "@/db/schema";
+import {
+  seedDemoData,
+  type SeedDemoDataOptions,
+  type SeedDemoDataSummary,
+} from "@/db/seed";
 import type { DbClient } from "@/lib/db";
 import type {
   NoteInput,
@@ -192,4 +197,22 @@ export async function createFocusSession(
     })
     .returning();
   return row;
+}
+
+// ---------- Demo workspace reset ----------
+
+/**
+ * Resets the demo workspace: wipes the demo user's data and re-seeds it
+ * anchored to today, so the live demo never goes stale. Scoped to the
+ * demo user's email only — never call this for a real user.
+ *
+ * Demo-only by design: auth is mocked to a single demo user
+ * (see lib/auth.ts). If real auth is ever introduced, this must stay
+ * behind the demo account or be removed.
+ */
+export async function resetDemoData(
+  client: DbClient,
+  opts: SeedDemoDataOptions = {}
+): Promise<SeedDemoDataSummary> {
+  return seedDemoData(client, opts);
 }
