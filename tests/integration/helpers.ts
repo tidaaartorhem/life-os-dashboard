@@ -11,6 +11,7 @@ import type { DbClient } from "@/lib/db";
 export interface TestContext {
   db: DbClient;
   userId: string;
+  userEmail: string;
   cleanup: () => void;
 }
 
@@ -39,6 +40,7 @@ export async function createTestDb(): Promise<TestContext> {
   return {
     db,
     userId: user.id,
+    userEmail: user.email,
     cleanup: () => {
       sqlite.close();
       rmSync(dir, { recursive: true, force: true });
